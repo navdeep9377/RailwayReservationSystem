@@ -11,7 +11,30 @@ public class TrainService {
     @Autowired
     private TrainRepository trainRepository;
 
+    // ... (other methods like getAllTrains, addTrain, etc. are here)
+
+    // --- ADD THESE TWO NEW METHODS ---
+    public List<String> getSourceStations() {
+        return trainRepository.findDistinctSourceStations();
+    }
+
+    public List<String> getDestinationStations() {
+        return trainRepository.findDistinctDestinationStations();
+    }
+
     public List<Train> searchTrains(String source, String destination) {
-        return trainRepository.findBySourceStationAndDestinationStation(source, destination);
+        return trainRepository.findBySourceStationAndDestinationStationIgnoreCase(source, destination);
+    }
+
+    public List<Train> getAllTrains() {
+        return trainRepository.findAll();
+    }
+
+    public Train addTrain(Train train) {
+        return trainRepository.save(train);
+    }
+
+    public void deleteTrain(Long id) {
+        trainRepository.deleteById(id);
     }
 }

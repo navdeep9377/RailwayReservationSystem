@@ -13,7 +13,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List; // Add this import
 import java.util.UUID;
+import java.util.stream.Collectors; // Add this import
 
 @Service
 public class BookingService {
@@ -22,6 +24,13 @@ public class BookingService {
 
     @Autowired
     private TrainRepository trainRepository;
+
+    // --- ADD THIS NEW METHOD ---
+    public List<BookingResponseDTO> getAllBookings() {
+        return bookingRepository.findAll().stream()
+                .map(this::convertToResponseDTO)
+                .collect(Collectors.toList());
+    }
 
     @Transactional
     public BookingResponseDTO bookTicket(BookingRequestDTO bookingRequest) {

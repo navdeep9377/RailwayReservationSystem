@@ -1,7 +1,7 @@
 package com.example.railway;
 
-import com.example.railway.entity.Train;
-import com.example.railway.repository.TrainRepository;
+import com.example.railway.entity.User; // Add this import
+import com.example.railway.repository.UserRepository; // Add this import
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -10,8 +10,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class RailwayReservationSystemApplication implements CommandLineRunner {
 
+    // Inject the UserRepository to interact with the user table
     @Autowired
-    private TrainRepository trainRepository;
+    private UserRepository userRepository;
 
     public static void main(String[] args) {
         SpringApplication.run(RailwayReservationSystemApplication.class, args);
@@ -19,10 +20,21 @@ public class RailwayReservationSystemApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // Pre-populate some train data
-        trainRepository.save(new Train(null, "12015", "Shatabdi Express", "Delhi", "Chandigarh", 100, 100));
-        trainRepository.save(new Train(null, "12951", "Rajdhani Express", "Mumbai", "Delhi", 150, 150));
-        trainRepository.save(new Train(null, "22439", "Vande Bharat", "Delhi", "Katra", 80, 80));
-        trainRepository.save(new Train(null, "12002", "Bhopal Shatabdi", "Delhi", "Bhopal", 120, 118));
+        // --- THIS CODE CREATES THE DEFAULT ADMIN USER ---
+
+        // Check if a user with the username "admin" already exists.
+        if (userRepository.findByUsername("admin").isEmpty()) {
+
+            // If not, create a new User object.
+            User admin = new User();
+            admin.setUsername("admin");
+            admin.setPassword("password"); // In a real app, this password should be encrypted!
+
+            // Save the new admin user to the database.
+            userRepository.save(admin);
+
+            // Print a message to the console so we know it was created.
+            System.out.println(">>> Created default admin user (admin/password) <<<");
+        }
     }
 }

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Safar - Indian Railway Bookings</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        :root{--primary-color:#0d6efd;--secondary-color:#6c757d;--success-color:#198754;--danger-color:#dc3545;--light-color:#f8f9fa;--dark-color:#212529;--font-family:'Poppins',sans-serif}body{margin:0;font-family:var(--font-family);background-color:var(--light-color);color:var(--dark-color)}.app-header{background-color:var(--primary-color);color:white;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 4px rgba(0,0,0,0.1)}.app-header h1{margin:0;font-weight:700}.nav-button{background-color:rgba(255,255,255,0.2);border:1px solid white;color:white;padding:.5rem 1rem;border-radius:4px;cursor:pointer}.container{max-width:900px;margin:2rem auto;padding:0 1rem}.card{background-color:white;padding:2rem;border-radius:8px;box-shadow:0 4px 8px rgba(0,0,0,0.1);margin-bottom:2rem}.card h2{margin-top:0;text-align:center;color:var(--primary-color)}.form-row{display:flex;justify-content:space-around;align-items:center;gap:1rem;margin-bottom:1.5rem}.form-group{display:flex;flex-direction:column;flex-grow:1}.form-group label{margin-bottom:.5rem;font-weight:500;color:var(--secondary-color)}.form-group input,.form-group select{padding:.75rem;border:1px solid #ccc;border-radius:4px;font-size:1rem;font-family:var(--font-family);background-color:white}.action-button{width:100%;padding:1rem;font-size:1.1rem;font-weight:700;color:white;border:none;border-radius:4px;cursor:pointer;transition:background-color .2s}.btn-success{background-color:var(--success-color)}.btn-success:hover{background-color:#146c43}.btn-primary{background-color:var(--primary-color)}.btn-primary:hover{background-color:#0b5ed7}.btn-danger{background-color:var(--danger-color);padding:.5rem 1rem;font-size:.9rem}.results-container{margin-top:2rem}.train-card{background-color:white;border-radius:8px;box-shadow:0 2px 5px rgba(0,0,0,0.1);margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;padding:1.5rem;transition:transform .2s}.train-card:hover{transform:translateY(-3px)}.train-info{display:flex;flex-direction:column}.train-info strong{font-size:1.2rem}.train-info span{color:var(--secondary-color)}.train-seats{text-align:center}.train-seats strong{font-size:1.5rem;color:var(--success-color)}.train-seats span{font-size:.9rem}.message{text-align:center;font-size:1.1rem;padding:1rem;border-radius:4px}.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,0.5);display:flex;justify-content:center;align-items:center;z-index:1000}.modal-content{background-color:white;padding:2rem;border-radius:8px;width:400px;box-shadow:0 5px 15px rgba(0,0,0,0.3)}table{width:100%;border-collapse:collapse}th,td{padding:.75rem;border-bottom:1px solid #ddd;text-align:left}th{font-weight:700}.error{color:var(--danger-color);font-weight:500;text-align:center;margin-top:1rem;}
+    </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script type="text/babel">
+
+    const App = () => {
+      const [view, setView] = React.useState('user');
+      const [isLoggedIn, setIsLoggedIn] = React.useState(false);
+
+      const handleLoginSuccess = () => {
+        setIsLoggedIn(true);
+      };
+
+      const handleLogout = () => {
+          fetch('/api/users/logout', { method: 'POST' }).then(() => {
+              setIsLoggedIn(false);
+          });
+      };
+
+      return (
+        <div>
+          <header className="app-header">
+            <h1><i className="fa-solid fa-train"></i> Safar - Railway Bookings</h1>
+            <button className="nav-button" onClick={() => setView(view === 'user' ? 'admin' : 'user')}>
+              Switch to {view === 'user' ? 'Admin' : 'User'} View
+            </button>
+          </header>
+          <div className="container">
+            {view === 'user' && <UserView />}
+            {view === 'admin' && !isLoggedIn && <LoginView onLoginSuccess={handleLoginSuccess} />}
+            {view === 'admin' && isLoggedIn && <AdminView onLogout={handleLogout} />}
+          </div>
+        </div>
+      );
+    };
+
+    const LoginView = ({ onLoginSuccess }) => {
+        const [username, setUsername] = React.useState('');
+        const [password, setPassword] = React.useState('');
+        const [error, setError] = React.useState('');
+
+        const handleLogin = () => {
+            setError('');
+            const credentials = { username, password };
+            fetch('/api/users/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(credentials)
+            }).then(res => {
+                if (res.ok) {
+                    onLoginSuccess();
+                } else {
+                    setError('Invalid username or password.');
+                }
+            }).catch(() => setError('Could not connect to the server.'));
+        };
+
+        return (
+            <div className="card">
+                <h2>Admin Login</h2>
+                <div className="form-group"><label>Username</label><input type="text" value={username} onChange={e => setUsername(e.target.value)} /></div>
+                <div className="form-group"><label>Password</label><input type="password" value={password} onChange={e => setPassword(e.target.value)} /></div>
+                {error && <p className="error">{error}</p>}
+                <button className="action-button btn-primary" onClick={handleLogin}>Login</button>
+            </div>
+        );
+    };
+
+    const UserView = () => {
+      const [source, setSource] = React.useState('');
+      const [destination, setDestination] = React.useState('');
+      const [trains, setTrains] = React.useState([]);
+      const [isLoading, setIsLoading] = React.useState(false);
+      const [message, setMessage] = React.useState('');
+      const [bookingModal, setBookingModal] = React.useState({ isOpen: false, trainId: null, trainName: '' });
+      const [passengerName, setPassengerName] = React.useState('');
+      const [passengerAge, setPassengerAge] = React.useState('');
+      const [confirmation, setConfirmation] = React.useState(null);
+      const [fromStations, setFromStations] = React.useState([]);
+      const [toStations, setToStations] = React.useState([]);
+
+      React.useEffect(() => {
+          fetch('/api/trains/stations/sources').then(res => res.json()).then(setFromStations);
+          fetch('/api/trains/stations/destinations').then(res => res.json()).then(setToStations);
+      }, []);
+
+      const handleSearch = () => {
+        setIsLoading(true); setTrains([]); setMessage(''); setConfirmation(null);
+        fetch(`/api/trains/search?source=${source}&destination=${destination}`)
+          .then(res => res.json()).then(data => {
+            setIsLoading(false);
+            if (data.length === 0) setMessage('No trains found for this route.');
+            else setTrains(data);
+          }).catch(err => { setIsLoading(false); setMessage('Error finding trains.'); });
+      };
+
+      const handleConfirmBooking = () => {
+          const bookingData = { trainId: bookingModal.trainId, passengerName, passengerAge: parseInt(passengerAge) };
+          fetch('/api/bookings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(bookingData) })
+              .then(res => res.json()).then(data => {
+                  if (data.pnrNumber) setConfirmation(`Booking successful! Your PNR is: ${data.pnrNumber}`);
+                  else setConfirmation(`Booking failed: ${data.message || 'Unknown error'}`);
+                  setBookingModal({ isOpen: false, trainId: null, trainName: '' });
+              }).catch(err => setConfirmation('Booking failed. Could not reach the server.'));
+      };
+
+      return (
+          <div>
+              <div className="card">
+                  <h2>Plan Your Journey</h2>
+                  <div className="form-row">
+                      <div className="form-group">
+                          <label htmlFor="source">From</label>
+                          <input list="from-stations-list" id="source" value={source} onChange={(e) => setSource(e.target.value)} />
+                          <datalist id="from-stations-list">{fromStations.map(city => <option key={city} value={city} />)}</datalist>
+                      </div>
+                      <div className="form-group">
+                          <label htmlFor="destination">To</label>
+                          <input list="to-stations-list" id="destination" value={destination} onChange={(e) => setDestination(e.target.value)} />
+                          <datalist id="to-stations-list">{toStations.map(city => <option key={city} value={city} />)}</datalist>
+                      </div>
+                  </div>
+                  <button className="action-button btn-success" onClick={handleSearch}>Find Trains</button>
+              </div>
+              <div className="results-container">
+                  {isLoading && <p className="message">Searching...</p>}
+                  {message && <p className="message">{message}</p>}
+                  {trains.map(train => (<div key={train.id} className="train-card"><div className="train-info"><strong>{train.trainName}</strong><span>#{train.trainNumber}</span></div><div className="train-seats"><strong>{train.availableSeats}</strong><span>Seats Available</span></div><button className="btn-primary" onClick={() => setBookingModal({ isOpen: true, trainId: train.id, trainName: train.trainName })}>Book Now</button></div>))}
+              </div>
+              {confirmation && (<div className="modal-overlay"><div className="modal-content"><h3>{confirmation.includes('successful') ? 'Success!' : 'Error'}</h3><p>{confirmation}</p><button className="action-button btn-primary" onClick={() => setConfirmation(null)}>Close</button></div></div>)}
+              {bookingModal.isOpen && (<div className="modal-overlay"><div className="modal-content"><h2>Book Ticket</h2><p><strong>Train:</strong> {bookingModal.trainName}</p><div className="form-group"><label>Passenger Name</label><input type="text" value={passengerName} onChange={(e) => setPassengerName(e.target.value)} /></div><div className="form-group"><label>Passenger Age</label><input type="text" value={passengerAge} onChange={(e) => setPassengerAge(e.target.value)} /></div><button className="action-button btn-success" onClick={handleConfirmBooking}>Confirm Booking</button><button style={{backgroundColor: 'var(--secondary-color)', marginTop: '0.5rem'}} className="action-button" onClick={() => setBookingModal({ isOpen: false, trainId: null, trainName: '' })}>Cancel</button></div></div>)}
+          </div>
+      );
+    };
+
+    const AdminView = ({ onLogout }) => {
+      const [adminTrains, setAdminTrains] = React.useState([]);
+      const [adminBookings, setAdminBookings] = React.useState([]);
+      const [newTrain, setNewTrain] = React.useState({ trainNumber: '', trainName: '', sourceStation: '', destinationStation: '', totalSeats: ''});
+
+      const fetchAdminData = () => {
+          fetch('/api/trains').then(res => res.json()).then(setAdminTrains).catch(() => setAdminTrains([]));
+          fetch('/api/bookings/all').then(res => res.json()).then(setAdminBookings).catch(() => setAdminBookings([]));
+      };
+
+      React.useEffect(() => { fetchAdminData(); }, []);
+
+      const handleInputChange = (e) => {
+          const { name, value } = e.target;
+          const isNumberField = name === 'totalSeats';
+          setNewTrain(prevState => ({ ...prevState, [name]: isNumberField ? value.replace(/\D/g, '') : value }));
+      };
+
+      const handleAddTrain = () => {
+          const trainToAdd = { ...newTrain, totalSeats: parseInt(newTrain.totalSeats), availableSeats: parseInt(newTrain.totalSeats) };
+          fetch('/api/trains', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(trainToAdd) })
+              .then(res => {
+                  if(res.ok) {
+                      fetchAdminData();
+                      setNewTrain({ trainNumber: '', trainName: '', sourceStation: '', destinationStation: '', totalSeats: ''});
+                  }
+              });
+      };
+
+      const handleDeleteTrain = (id) => {
+          if (confirm('Are you sure you want to delete this train? This will fail if there are active bookings.')) {
+              fetch(`/api/trains/${id}`, { method: 'DELETE' }).then((res) => {
+                  if(res.ok) fetchAdminData();
+                  else alert('Deletion failed. Make sure no bookings exist for this train.');
+              });
+          }
+      };
+
+      const handleCancelBooking = (pnr) => {
+          if (confirm('Are you sure you want to cancel this booking?')) {
+              fetch(`/api/bookings/${pnr}`, { method: 'DELETE' }).then(() => fetchAdminData());
+          }
+      };
+
+      return (
+          <div>
+              <button className="action-button btn-danger" style={{marginBottom: '1rem'}} onClick={onLogout}>Logout</button>
+              <div className="card">
+                  <h2><i className="fa-solid fa-plus"></i> Add New Train</h2>
+                  <div className="form-row"><div className="form-group"><label>Train Number</label><input type="text" name="trainNumber" value={newTrain.trainNumber} onChange={handleInputChange} /></div><div className="form-group"><label>Train Name</label><input type="text" name="trainName" value={newTrain.trainName} onChange={handleInputChange} /></div></div>
+                  <div className="form-row"><div className="form-group"><label>Source</label><input type="text" name="sourceStation" value={newTrain.sourceStation} onChange={handleInputChange} /></div><div className="form-group"><label>Destination</label><input type="text" name="destinationStation" value={newTrain.destinationStation} onChange={handleInputChange} /></div></div>
+                  <div className="form-row"><div className="form-group"><label>Total Seats</label><input type="text" name="totalSeats" value={newTrain.totalSeats} onChange={handleInputChange} /></div></div>
+                  <button className="action-button btn-primary" onClick={handleAddTrain}>Add Train</button>
+              </div>
+              <div className="card">
+                  <h2><i className="fa-solid fa-train-subway"></i> All Available Trains</h2>
+                  <table><thead><tr><th>ID</th><th>Number</th><th>Name</th><th>Route</th><th>Seats</th><th>Action</th></tr></thead>
+                      <tbody>{Array.isArray(adminTrains) && adminTrains.map(train => (<tr key={train.id}><td>{train.id}</td><td>{train.trainNumber}</td><td>{train.trainName}</td><td>{train.sourceStation} to {train.destinationStation}</td><td>{train.availableSeats}/{train.totalSeats}</td><td><button className="btn-danger" onClick={() => handleDeleteTrain(train.id)}>Delete</button></td></tr>))}</tbody>
+                  </table>
+              </div>
+              <div className="card">
+                  <h2><i className="fa-solid fa-ticket"></i> All Bookings</h2>
+                  <table><thead><tr><th>PNR</th><th>Passenger</th><th>Train</th><th>Status</th><th>Action</th></tr></thead>
+                      <tbody>{Array.isArray(adminBookings) && adminBookings.map(booking => (<tr key={booking.pnrNumber}><td>{booking.pnrNumber}</td><td>{booking.passengerName}</td><td>{booking.trainNumber}</td><td>{booking.status}</td><td>{booking.status === 'CONFIRMED' && <button className="btn-danger" onClick={() => handleCancelBooking(booking.pnrNumber)}>Cancel</button>}</td></tr>))}</tbody>
+                  </table>
+              </div>
+          </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+</script>
+</body>
+</html>
